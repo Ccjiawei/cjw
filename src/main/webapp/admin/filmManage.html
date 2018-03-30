@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>电影信息管理界面</title>
+<link rel="stylesheet" type="text/css" href="/static/jquery-easyui-1.3.3/themes/default/easyui.css" />
+<link rel="stylesheet" type="text/css" href="/static/jquery-easyui-1.3.3/themes/icon.css" />
+<script type="text/javascript" src="/static/jquery-easyui-1.3.3/jquery.min.js"></script>
+<script type="text/javascript" src="/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript">
+
+	var url
+	
+	//条件查询
+	function searchFilm(){
+		$("#dg").datagrid("load",{
+			"name":$("#s_name").val()
+		})
+	}
+	
+	function formatHot(val,row){
+		if(val=="1"){
+			return "是";
+		}else{
+			return "否";
+		}
+	}
+	
+	function formatterImageName(val,row){
+		return "<img width=100px height=100px src='/static/filmImage/"+val+"'/>"
+	}
+	
+	//删除
+	function webSiteRemove(){
+		var rows = $("#dg").datagrid("getSelections");
+		if(rows.length==0){
+			$.messager.alert("系统提示","请选择要删除的数据 ！");
+			return ;
+		}
+		var strIds = [];
+		for(var i=0;i<rows.length;i++){
+			strIds.push(rows[i].id);
+		}
+		var ids = strIds.join(",");
+		$.messager.confirm("系统提示","确认要删除这&nbsp;<font color=red>"+rows.length+"</font>&nbsp;条信息吗?",function(r){
+			if(r){
+				$.post("/admin/film/delete",{ids:ids},function(result){
+					if(result.success){
+						$.messager.alert("系统提示","删除成功!");
+						$("#dg").datagrid("reload");
+					}else{
+						$("#dg").datagrid("reload");
+						$.messager.alert("系统提示",result.errorInfo);
+					}
+				},"json");
+			}
+		})
+		
+	}
+	
+	function openFilmModifyTab(){
+		var rows = $("#dg").datagrid("getSelections");
+		if(rows.length!=1){
+			$.messager.alert("系统提示","请选择一条要修改的电影！");
+			return ;
+		}
+		window.parent.openTab('修改电影信息','modifyFilm.html?id='+rows[0].id,'icon-modifyFilm');
+	}
+</script>
+</head>
+<body style="margin:1px">
+	<table id="dg" title="电影信息管理" class="easyui-datagrid"
+		fitColumns="true" pagination="true" rownumbers="true"
+		url="/admin/film/list" fit="true" toolbar="#tb">
+		<thead>
+			<tr>
+				<th field="cb" checkbox="true" align="center"></th>
+				<th field="id" width="20" align="center">编号</th>
+				<th field="imageName" width="50" align="center" formatter="formatterImageName">电影图片</th>
+				<th field="name" width="100" align="center">电影名称</th>
+				<th field="title" width="200" align="center">帖子标题</th>
+				<th field="hot" width="50" align="center" formatter="formatHot">热门?</th>
+				<th field="publishDate" width="150" align="center">发布日期</th>
+			</tr>
+		</thead>
+	</table>
+	<div id="tb">
+		<div>
+			<a href="javascript:openFilmModifyTab()" class="easyui-linkbutton" iconCls="icon-edit" plain="true">修改</a>
+			<a href="javascript:webSiteRemove()" class="easyui-linkbutton" iconCls="icon-remove" plain="true">删除</a>
+		</div>
+		<div>
+			&nbsp;电影名称&nbsp;<input type="text" id="s_name" size="20" onkeydown="if(event.keyCode==13) searchFilm()"/>
+			<a href="javascript:searchFilm()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+		</div>
+	</div>
+</body>
+</html>
